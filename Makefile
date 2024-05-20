@@ -4,7 +4,10 @@ CFLAGS = -Wall -Wextra -Werror
 LIBFT_PATH = libft
 LIBFT = $(LIBFT_PATH)/libft.a
 
-SRCS = main.c
+SRCS = main.c \
+		philo.c \
+		utils.c \
+		init.c \
 
 OBJS = $(SRCS:.c=.o)
 

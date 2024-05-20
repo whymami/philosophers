@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: muguveli <muguveli@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: aleynakoluk <aleynakoluk@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/20 15:59:41 by muguveli          #+#    #+#             */
-/*   Updated: 2024/05/20 18:55:26 by muguveli         ###   ########.fr       */
+/*   Updated: 2024/05/20 22:52:37 by aleynakoluk      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,5 +57,14 @@ typedef struct s_philo
 	long long		start_time;
 	t_data			*data;
 }					t_philo;
+
+long long get_time(void);
+pthread_mutex_t *init_forks(t_data *data);
+t_philo *init_philo(t_data *data, pthread_mutex_t *fork_arr);
+int arg_control(int argc, char **argv);
+int init_data(t_data *data, char **argv);
+void display_status(t_philo *philo, char *status);
+void take_forks(t_philo *philo);
+void *live(void *arg);
 
 #endif
