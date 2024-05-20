@@ -1,41 +1,61 @@
-#ifndef PHILPO_H
-#define PHILPO_H
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   philo.h                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: muguveli <muguveli@student.42istanbul.c    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/05/20 15:59:41 by muguveli          #+#    #+#             */
+/*   Updated: 2024/05/20 18:55:26 by muguveli         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#include <pthread.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include "sys/time.h"
+#ifndef PHILO_H
+# define PHILO_H
 
+# include <pthread.h>
+# include <stdio.h>
+# include <unistd.h>
+# include <stdlib.h>
+# include <sys/time.h>
+# include "libft/libft.h"
 
-# define MAX_INT 2147483647
-# define MIN_INT -2147483648
+# define INVALID_ARGS_ERR "Invalid arguments"
+# define THREAD_CREATE_ERR "Failed to create a thread"
+# define THREAD_JOIN_ERR "Failed to join a thread"
+# define MALLOC_ERR "malloc() failed to allocate memory"
+# define MUTEX_INIT_ERR "Failed to initialize mutex"
+
 # define FORK "has taken a fork"
-# define EAT "is eating"
-# define SLEEP "is sleeping"
-# define THINK "is thinking"
-# define DIE "died"
+# define EATING "is eating"
+# define SLEEPING "is sleeping"
+# define THINKING "is thinking"
+# define DEAD "died"
 
-typedef struct s_data
+
+//alınana argümanların tutulduğu struct
+typedef struct s_data 
 {
-	int				nb_of_philo;
-	int				nb_of_circle;
-	int				t_to_die;
-	int				t_to_eat;
-	int				t_to_sleep;
-	long			creation_time;
-	pthread_mutex_t	*display;
-}	t_data;
+	int				num_of_philo;
+	int				time_to_die;
+	int				time_to_eat;
+	int				time_to_sleep;
+	int				num_of_must_eat;
+	int				is_dead;
+	pthread_mutex_t	display_mutex;
+} 					t_data;
 
+//philo bilgilerinin tutulduğu struct
 typedef struct s_philo
 {
-	int				index;
-	int				loop;
-	long			last_meal;
-	pthread_t		id;
-	pthread_mutex_t	*last_meal_x;
-	pthread_mutex_t	*fork;
-	pthread_mutex_t	*circle_x;
+	int				id;
+	int				nbr_of_meals;
+	pthread_mutex_t	*left_fork;
+	pthread_mutex_t	*right_fork;
+	long long		last_meal_time;
+	pthread_t		thread_id;
+	long long		start_time;
 	t_data			*data;
-}	t_philo;
+}					t_philo;
 
 #endif

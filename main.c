@@ -5,262 +5,186 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: muguveli <muguveli@student.42istanbul.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/02 15:07:56 by muguveli          #+#    #+#             */
-/*   Updated: 2024/05/08 18:19:56 by muguveli         ###   ########.fr       */
+/*   Created: 2024/05/20 16:08:51 by muguveli          #+#    #+#             */
+/*   Updated: 2024/05/20 20:34:50 by muguveli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <pthread.h>
-#include "Libft/libft.h"
 #include "philo.h"
 
-void print_error(void)
+long long	get_time(void)
 {
-    write(1, "Error\n", 6);
-    exit(1);
-}
+	struct timeval	time;
 
-void sign_check(char **argv)
-{
-    int    i;
-    int    j;
-
-    i = 1;
-    while (argv[i])
-    {
-        j = 0;
-        if (argv[i][j] == '\0')
-            print_error();
-        while (argv[i][j])
-        {
-            if ((argv[i][j] < '0' || argv[i][j] > '9') && argv[i][j] != ' '
-                && argv[i][j] != '+')
-                print_error();
-            if (argv[i][j] == '+')
-                if ((argv[i][j + 1] < '0' || argv[i][j + 1] > '9') || (argv[i][j
-                        - 1] >= '0' && argv[i][j - 1]))
-                    print_error();
-            j++;
-        }
-        i++;
-    }
-}
-
-void arg_check(char **argv)
-{
-    int    i;
-    int    j;
-
-    i = 0;
-    while (argv[++i])
-    {
-        j = -1;
-        while (argv[i][++j])
-            if (ft_isdigit(argv[i][j]) == 0)
-                print_error();
-    }
-    sign_check(argv);
-}
-
-#include "stdio.h"
-
-static void fill_data(t_philo *philo, char **argv, int argc)
-{
-	philo->data->nb_of_philo = ft_atoi(argv[1]);
-	philo->data->t_to_die = ft_atoi(argv[2]);
-	philo->data->t_to_eat = ft_atoi(argv[3]);
-	philo->data->t_to_sleep = ft_atoi(argv[4]);
-	if (argc == 6)
-	{
-		philo->data->nb_of_circle = ft_atoi(argv[5]);
-		philo->circle_x = ft_calloc(sizeof(pthread_mutex_t), 1);
-		philo->loop = ft_atoi(argv[5]);
-	}
-	else
-		philo->data->nb_of_circle = -1;	
-}
-
-t_philo *init_struct(char **argv, int argc)
-{
-	int i;
-	t_philo *philo;
-	pthread_mutex_t *fork;
-	pthread_mutex_t *write_console;
-
-	i = -1;
-	philo = ft_calloc(sizeof(t_philo), ft_atoi(argv[1]));
-	fork = ft_calloc(sizeof(pthread_mutex_t), ft_atoi(argv[1]));
-	write_console = ft_calloc(sizeof(pthread_mutex_t), 1);
-	if (!philo || !fork || !write_console)
-		print_error(); //ALLOCATION ERROR kodu yazılacak
-	while (++i < ft_atoi(argv[1]))
-	{
-		philo[i].data = ft_calloc(sizeof(t_data), 1);
-		philo[i].fork = fork;
-		philo[i].data->display = write_console;
-		philo[i].last_meal_x = ft_calloc(sizeof(pthread_mutex_t), 1);
-		if (!philo[i].data || !philo[i].last_meal_x)
-			print_error(); //ALLOCATION ERROR kodu yazılacak
-		fill_data(&philo[i], argv, argc);
-	}
-	return (philo);
-}	
-
-long timestart(void)
-{
-	struct timeval time;
 	gettimeofday(&time, NULL);
 	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
 }
 
-void ft_usleep(int time)
+int	arg_control(int argc, char **argv)
 {
-	long start;
-	long end;
+	int	i;
+	int	j;
 
-	start = timestart();
-	end = timestart();
-	while (end - start < time)
+	if ((argc < 5 || argc > 6) && printf("%s\n", INVALID_ARGS_ERR))
+		return (1);
+	i = 0;
+	while (++i < argc)
 	{
-		usleep(100);
-		end = timestart();
+		j = -1;
+		while (argv[i][++j])
+			if (!ft_isdigit(argv[i][j]) && printf("%s\n", INVALID_ARGS_ERR))
+				return (1);
 	}
-}
-void ft_write_console(t_philo *philo, char *str)
-{
-	pthread_mutex_lock(philo->data->display);
-	printf("%ld %d %s\n", timestart() - philo->data->creation_time, philo->index, str);
-	pthread_mutex_unlock(philo->data->display);
+	return (0);
 }
 
-void eat(t_philo *philo)
+int	init_data(t_data *data, char **argv)
 {
-	pthread_mutex_lock(&philo->fork[philo->index - 1]);
-	ft_write_console(philo, FORK);
-	pthread_mutex_lock(&philo->fork[(philo->index) % philo->data->nb_of_philo]);
-	ft_write_console(philo, FORK);
-	ft_write_console(philo, EAT);
-	if (philo->data->nb_of_circle > 0)
+	data->num_of_philo = ft_atoi(argv[1]);
+	data->time_to_die = ft_atoi(argv[2]);
+	data->time_to_eat = ft_atoi(argv[3]);
+	data->time_to_sleep = ft_atoi(argv[4]);
+	data->is_dead = 0;
+	if (argv[5])
+		data->num_of_must_eat = ft_atoi(argv[5]);
+	else
+		data->num_of_must_eat = -1;
+	if (pthread_mutex_init(&data->display_mutex, NULL) && printf("%s\n",
+			MUTEX_INIT_ERR))
+		return (1);
+	return (0);
+}
+
+pthread_mutex_t	*init_forks(t_data *data)
+{
+	pthread_mutex_t	*forks;
+	int				i;
+
+	forks = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t)
+			* data->num_of_philo);
+	if (!forks && printf("%s\n", MALLOC_ERR))
+		return (NULL);
+	i = -1;
+	while (++i < data->num_of_philo)
+		if (pthread_mutex_init(&forks[i], NULL) && printf("%s\n",
+				MUTEX_INIT_ERR))
+			return (NULL);
+	return (forks);
+}
+
+t_philo	*init_philo(t_data *data, pthread_mutex_t *fork_arr)
+{
+	t_philo	*philo;
+	int		i;
+
+	philo = (t_philo *)malloc(sizeof(t_philo) * data->num_of_philo);
+	if (!philo && printf("%s\n", MALLOC_ERR))
+		return (NULL);
+	i = -1;
+	while (++i < data->num_of_philo)
 	{
-		pthread_mutex_lock(philo->circle_x);
-		philo->loop--;
-		pthread_mutex_unlock(philo->circle_x);
+		philo[i].id = i + 1;
+		philo[i].nbr_of_meals = 0;
+		philo[i].left_fork = &fork_arr[i];
+		philo[i].right_fork = &fork_arr[(i + 1) % data->num_of_philo];
+		philo[i].last_meal_time = get_time();
+		philo[i].data = data;
 	}
-	pthread_mutex_lock(philo->last_meal_x);
-	philo->last_meal = timestart();
-	pthread_mutex_unlock(philo->last_meal_x);
-	ft_usleep(philo->data->t_to_eat);
-	pthread_mutex_unlock(&philo->fork[philo->index - 1]);
-	pthread_mutex_unlock(&philo->fork[(philo->index) % philo->data->nb_of_philo]);	
+	return (philo);
 }
 
-void *routine(void *arg)
+void	display_status(t_philo *philo, char *status)
 {
-	t_philo *philo;
+	long long	time;
+
+	pthread_mutex_lock(&philo->data->display_mutex);
+	time = get_time() - philo->start_time;
+	printf("%lld %d %s\n", time, philo->id, status);
+	pthread_mutex_unlock(&philo->data->display_mutex);
+}
+
+void	take_forks(t_philo *philo)
+{
+	if (philo->id % 2 == 0)
+	{
+		pthread_mutex_lock(philo->right_fork);
+		display_status(philo, FORK);
+		pthread_mutex_lock(philo->left_fork);
+		display_status(philo, FORK);
+	}
+	else
+	{
+		pthread_mutex_lock(philo->left_fork);
+		display_status(philo, FORK);
+		pthread_mutex_lock(philo->right_fork);
+		display_status(philo, FORK);
+	}
+	display_status(philo, EATING);
+	philo->nbr_of_meals++;
+	philo->last_meal_time = get_time();
+	usleep(philo->data->time_to_eat * 1000);
+	pthread_mutex_unlock(philo->left_fork);
+	pthread_mutex_unlock(philo->right_fork);
+	display_status(philo, SLEEPING);
+	usleep(philo->data->time_to_sleep * 1000);
+	display_status(philo, THINKING);
+}
+
+void	*live(void *arg)
+{
+	t_philo	*philo;
+
 	philo = (t_philo *)arg;
-	philo->last_meal = timestart();
-	if (philo->index % 2 == 0)
+	while (!philo->data->is_dead)
 	{
-		ft_usleep(philo->data->t_to_eat);
-		philo->last_meal = timestart();
-	}
-	while(1)
-	{
-		usleep(10);
-		eat(philo);
-		ft_write_console(philo, SLEEP);
-		ft_usleep(philo->data->t_to_sleep);
-		ft_write_console(philo, THINK);
+		if (philo->data->num_of_must_eat != -1
+			&& philo->nbr_of_meals >= philo->data->num_of_must_eat)
+			break ;
+		take_forks(philo);
+		if (get_time() - philo->last_meal_time >= philo->data->time_to_die)
+		{
+			display_status(philo, DEAD);
+			philo->data->is_dead = 1;
+			break ;
+		}
 	}
 	return (NULL);
 }
 
-int init_thread(t_philo *philo)
+int	start_simulation(t_philo *philo, t_data *data)
 {
-	int i;
+	int	i;
 
 	i = -1;
-	while (++i < philo->data->nb_of_philo)
+	while (++i < data->num_of_philo)
 	{
-		philo[i].data->creation_time = timestart();
-		philo[i].index = i + 1;
-		pthread_mutex_init(&philo->fork[i], NULL);
-		pthread_mutex_init(philo[i].data->display, NULL);
-		pthread_mutex_init(philo[i].last_meal_x, NULL);
-		if (philo[i].data->nb_of_circle > 0)
-			pthread_mutex_init(philo[i].circle_x, NULL);
-		if (pthread_create(&philo[i].id, NULL, &routine, philo + i) != 0)
-			print_error(); //THREAD ERROR kodu yazılacak
+		philo[i].start_time = get_time();
+		if (pthread_create(&philo[i].thread_id, NULL, live, &philo[i])
+			&& printf("%s\n", THREAD_CREATE_ERR))
+			return (1);
 	}
-	return (1);
-}
-
-int is_death(t_philo philo)
-{
-	pthread_mutex_lock(philo.data->display);
-	pthread_mutex_lock(philo.last_meal_x);
-	if ((timestart() - philo.last_meal) >= philo.data->t_to_die)
-	{
-		printf("%ld %d %s\n", timestart() - philo.data->creation_time, philo.index, DIE);
-		return (1);
-	}
-	pthread_mutex_unlock(philo.last_meal_x);
-	pthread_mutex_unlock(philo.data->display);
+	i = -1;
+	while (++i < data->num_of_philo)
+		if (pthread_join(philo[i].thread_id, NULL) && printf("%s\n",
+				THREAD_JOIN_ERR))
+			return (1);
 	return (0);
-}
-
-int is_circle(t_philo *philo)
-{
-	int i;
-
-	i = -1;
-	while (++i < philo->data->nb_of_philo)
-	{
-		pthread_mutex_lock(philo[i].circle_x);
-		if (philo[i].loop > 0)
-		{
-			pthread_mutex_unlock(philo[i].circle_x);
-			return (0);
-		}
-		pthread_mutex_unlock(philo[i].circle_x);
-	}
-	return (1);
-}
-
-int stalker(t_philo *philo)
-{
-	int i;
-
-	i = -1;
-	ft_usleep(15);
-	while (1)
-	{
-		usleep(10);
-		while (++i < philo->data->nb_of_philo)
-			if (is_death(philo[i]))
-				return (1);
-		i = -1;
-		if (philo->data->nb_of_circle > 0)
-			if (is_circle(philo))
-				return (1);
-	}
 }
 
 int	main(int argc, char **argv)
 {
-	t_philo *philo;
+	t_data			data;
+	t_philo			*philo;
+	pthread_mutex_t	*forks;
 
-	if (argc < 5 || argc > 6)
-		print_error();
-	arg_check(argv);
-	philo = init_struct(argv, argc);
+	if (arg_control(argc, argv) || init_data(&data, argv))
+		return (1);
+	forks = init_forks(&data);
+	if (!forks)
+		return (1);
+	philo = init_philo(&data, forks);
 	if (!philo)
-		print_error(); //ALLOCATION ERROR kodu yazılacak
-	if (init_thread(philo))
-		print_error(); //THREAD ERROR kodu yazılacak
-	if (stalker(philo))
-		print_error(); //THREAD ERROR kodu yazılacak
-	
+		return (1);
+	if (!start_simulation(philo, &data))
+		return (1);
 }
