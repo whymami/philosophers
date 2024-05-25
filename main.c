@@ -1,42 +1,64 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: muguveli <muguveli@student.42istanbul.c    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/05/23 20:31:40 by muguveli          #+#    #+#             */
+/*   Updated: 2024/05/25 17:04:15 by muguveli         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "philo.h"
 
-static int start_simulation(t_philo *philo, t_data *data)
+void	ft_usleep(int time)
 {
-    int i;
+	long	start;
+	long	end;
 
-    i = 0;
-    while (i < data->num_of_philo)
-    {
-        philo[i].start_time = get_time();
-        if (pthread_create(&philo[i].thread_id, NULL, live, &philo[i])
-            && printf("%s\n", THREAD_CREATE_ERR))
-            return 1;
-        i++;
-    }
-    i = 0;
-    while (i < data->num_of_philo)
-    {
-        if (pthread_join(philo[i].thread_id, NULL) && printf("%s\n", THREAD_JOIN_ERR))
-            return 1;
-        i++;
-    }
-    return 0;
+	start = get_time();
+	end = get_time();
+	while (end - start < time)
+	{
+		usleep(100);
+		end = get_time();
+	}
+}
+
+static int	arg_control(int argc, char **argv)
+{
+	int	i;
+	int	j;
+
+	if ((argc < 5 || argc > 6) && printf("%s\n", INVALID_ARGS_ERR))
+		return (1);
+	i = 0;
+	while (++i < argc)
+	{
+		j = -1;
+		while (argv[i][++j])
+			if (!ft_isdigit(argv[i][j]) && printf("%s\n", INVALID_ARGS_ERR))
+				return (1);
+	}
+	return (0);
 }
 
 int	main(int argc, char **argv)
 {
-	t_data			data;
 	t_philo			*philo;
 	pthread_mutex_t	*forks;
 
-	if (arg_control(argc, argv) || init_data(&data, argv))
+	if (arg_control(argc, argv))
 		return (1);
-	forks = init_forks(&data);
+	forks = init_mutex(argv);
 	if (!forks)
 		return (1);
-	philo = init_philo(&data, forks);
+	philo = init_philo(argv, argc, forks);
 	if (!philo)
 		return (1);
-	if (!start_simulation(philo, &data))
+	if (!init_thread(philo))
+		return (1);
+	if (stalker(philo))
 		return (1);
 }

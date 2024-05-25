@@ -1,49 +1,85 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   philo.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: muguveli <muguveli@student.42istanbul.c    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/05/25 15:59:54 by muguveli          #+#    #+#             */
+/*   Updated: 2024/05/25 18:09:41 by muguveli         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "philo.h"
 
-
-void take_forks(t_philo *philo)
+void	eat(t_philo *philo)
 {
-    if (philo->id % 2 == 0)
-    {
-        pthread_mutex_lock(philo->right_fork);
-        display_status(philo, FORK);
-        pthread_mutex_lock(philo->left_fork);
-        display_status(philo, FORK);
-    }
-    else
-    {
-        pthread_mutex_lock(philo->left_fork);
-        display_status(philo, FORK);
-        pthread_mutex_lock(philo->right_fork);
-        display_status(philo, FORK);
-    }
-    display_status(philo, EATING);
-    philo->nbr_of_meals++;
-    philo->last_meal_time = get_time();
-    usleep(philo->data->time_to_eat * 1000);
-    pthread_mutex_unlock(philo->left_fork);
-    pthread_mutex_unlock(philo->right_fork);
-    display_status(philo, SLEEPING);
-    usleep(philo->data->time_to_sleep * 1000);
-    display_status(philo, THINKING);
+	pthread_mutex_lock(philo->left_fork);
+	display(philo, FORK);
+	pthread_mutex_lock(philo->right_fork);
+	display(philo, FORK);
+	display(philo, EATING);
+	if (philo->data->must_eat > 0)
+	{
+		pthread_mutex_lock(philo->loop_count_mutex);
+		philo->loop_count--;
+		pthread_mutex_unlock(philo->loop_count_mutex);
+	}
+	pthread_mutex_lock(philo->last_eat_mutex);
+	philo->last_eat = get_time();
+	pthread_mutex_unlock(philo->last_eat_mutex);
+	ft_usleep(philo->data->eat_time);
+	pthread_mutex_unlock(philo->left_fork);
+	pthread_mutex_unlock(philo->right_fork);
 }
 
-void *live(void *arg)
+static int	is_dead(t_philo philo)
 {
-    t_philo *philo;
+	pthread_mutex_lock(philo.last_eat_mutex);
+	pthread_mutex_lock(philo.data->display);
+	if ((get_time() - philo.last_eat) >= philo.data->live_time)
+	{
+		printf("%lld %d %s\n", get_time() - philo.data->start_time,
+			philo.philo_idx, DEAD);
+		return (1);
+	}
+	pthread_mutex_unlock(philo.last_eat_mutex);
+	pthread_mutex_unlock(philo.data->display);
+	return (0);
+}
 
-    philo = (t_philo *)arg;
-    while (!philo->data->is_dead)
-    {
-        if (philo->data->num_of_must_eat != -1 && philo->nbr_of_meals >= philo->data->num_of_must_eat)
-            break;
-        take_forks(philo);
-        if (get_time() - philo->last_meal_time >= philo->data->time_to_die)
-        {
-            display_status(philo, DEAD);
-            philo->data->is_dead = 1;
-            break;
-        }
-    }
-    return NULL;
+static int	is_okey(t_philo *philo)
+{
+	int	i;
+
+	i = -1;
+	while (++i < philo->data->philo_count)
+	{
+		pthread_mutex_lock(philo[i].loop_count_mutex);
+		if (philo[i].loop_count > 0)
+		{
+			pthread_mutex_unlock(philo[i].loop_count_mutex);
+			return (0);
+		}
+		pthread_mutex_unlock(philo[i].loop_count_mutex);
+	}
+	return (1);
+}
+
+int	stalker(t_philo *philo)
+{
+	int	i;
+
+	ft_usleep(15);
+	while (1)
+	{
+		usleep(10);
+		i = -1;
+		while (++i < philo->data->philo_count)
+			if (is_dead(philo[i]))
+				return (1);
+		if (philo->data->must_eat > 0)
+			if (is_okey(philo))
+				return (1);
+	}
 }
