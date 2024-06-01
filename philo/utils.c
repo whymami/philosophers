@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: beyarsla <beyarsla@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: muguveli <muguveli@student.42istanbul.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/27 16:45:14 by muguveli          #+#    #+#             */
-/*   Updated: 2024/06/01 16:13:37 by beyarsla         ###   ########.fr       */
+/*   Updated: 2024/06/01 20:59:24 by muguveli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,8 @@ long	ft_atol(const char *str)
 			sign *= -1;
 	while (str[i] >= 48 && str[i] <= 57)
 		tmp = (tmp * 10) + (str[i++] - 48);
-	if ((tmp * sign < -2147483648 || tmp * sign > 2147483647) && printf("max int error\n"))
+	if ((tmp * sign < -2147483648 || tmp * sign > 2147483647)
+		&& printf("max int error\n"))
 		exit(1);
 	return (tmp * sign);
 }
@@ -55,4 +56,19 @@ void	ft_usleep(int wait_time)
 	time = get_time();
 	while (get_time() - time < (unsigned long long)wait_time)
 		usleep(100);
+}
+
+void	display(t_philo *philo, char *msg)
+{
+	long long	time;
+
+	pthread_mutex_lock(&philo->data->display);
+	if (philo->data->philo_dead == 1)
+	{
+		pthread_mutex_unlock(&philo->data->display);
+		return ;
+	}
+	time = get_time() - philo->philo_start;
+	printf("%lld %d %s\n", time, philo->philo_index, msg);
+	pthread_mutex_unlock(&philo->data->display);
 }
