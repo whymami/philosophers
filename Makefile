@@ -3,9 +3,9 @@ CC = gcc
 CFLAGS = -Wall -Wextra -Werror
 
 SRCS = main.c \
-		philo.c \
 		utils.c \
-		init.c \
+		# philo.c \
+		# init.c \
 
 OBJS = $(SRCS:.c=.o)
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: muguveli <muguveli@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: beyarsla <beyarsla@student.42istanbul.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/23 20:26:22 by muguveli          #+#    #+#             */
-/*   Updated: 2024/05/25 17:53:23 by muguveli         ###   ########.fr       */
+/*   Updated: 2024/06/01 16:13:33 by beyarsla         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,37 +34,31 @@
 
 typedef struct s_data
 {
-	int				philo_count;
-	int				live_time;
-	int				eat_time;
-	int				sleep_time;
-	int				must_eat;
-	long			start_time;
-	pthread_mutex_t	*display;
-}					t_data;
+	int		philo_count; //argv[1]
+	int		philo_live_time; //argv[2]
+	int		philo_eat_time; //argv[3]
+	int		philo_sleep_time; //argv[4]
+	int		philo_must_eat; //argv[5]
+	int		philo_dead;
+	pthread_mutex_t	display;
+}			t_data;
 
 typedef struct s_philo
 {
-	int				philo_idx;
-	int				loop_count;
-	long			last_eat;
-	pthread_t		thread_id;
-	pthread_mutex_t	*last_eat_mutex;
-	pthread_mutex_t	*left_fork;
-	pthread_mutex_t	*right_fork;
-	pthread_mutex_t	*loop_count_mutex;
-	t_data			*data;
-}					t_philo;
+	int	philo_index;
+	int philo_loop;
+	long long philo_start;
+	long long philo_last_eat;
+	pthread_mutex_t *left_fork; //sol çatal
+	pthread_mutex_t *right_fork; //sağ çatal
+	pthread_mutex_t philo_last_eat_mutex;
+	pthread_t	philo_thread;
+	t_data	*data; //argümanalara ulaşması için
+}		t_philo;
 
-long				ft_atol(const char *str);
-int					ft_isdigit(int c);
-long long			get_time(void);
-void				display(t_philo *philo, char *msg);
-pthread_mutex_t		*init_mutex(char **argv);
-t_philo				*init_philo(char **argv, int argc, pthread_mutex_t *forks);
-int					init_thread(t_philo *philo);
-void				eat(t_philo *philo);
-int					stalker(t_philo *philo);
-void				ft_usleep(int time);
+int	ft_isdigit(int c);
+long long	get_time(void);
+long	ft_atol(const char *str);
+void	ft_usleep(int wait_time);
 
 #endif

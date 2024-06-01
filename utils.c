@@ -3,21 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: muguveli <muguveli@student.42istanbul.c    +#+  +:+       +#+        */
+/*   By: beyarsla <beyarsla@student.42istanbul.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/25 15:33:41 by muguveli          #+#    #+#             */
-/*   Updated: 2024/05/26 17:21:55 by muguveli         ###   ########.fr       */
+/*   Created: 2024/05/27 16:45:14 by muguveli          #+#    #+#             */
+/*   Updated: 2024/06/01 16:13:37 by beyarsla         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
-
-void	display_error(char *msg)
-		// daha detaylı hale getirilecek freeleme vs eklenecek unutma aq
-{
-	printf("%s\n", msg);
-	exit(1);
-}
 
 long	ft_atol(const char *str)
 {
@@ -35,8 +28,8 @@ long	ft_atol(const char *str)
 			sign *= -1;
 	while (str[i] >= 48 && str[i] <= 57)
 		tmp = (tmp * 10) + (str[i++] - 48);
-	if (tmp * sign < -2147483648 || tmp * sign > 2147483647)
-		display_error(MAX_MIN_INT);
+	if ((tmp * sign < -2147483648 || tmp * sign > 2147483647) && printf("max int error\n"))
+		exit(1);
 	return (tmp * sign);
 }
 
@@ -52,13 +45,14 @@ long long	get_time(void)
 	struct timeval	time;
 
 	gettimeofday(&time, NULL);
-	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
+	return ((((long long)time.tv_sec) * 1000) + (time.tv_usec / 1000));
 }
 
-void	display(t_philo *philo, char *msg)
+void	ft_usleep(int wait_time)
 {
-	pthread_mutex_lock(philo->data->display);
-	printf("%lld %d %s\n", get_time() - philo->data->start_time,
-		philo->philo_idx, msg);
-	pthread_mutex_unlock(philo->data->display);
+	unsigned long long	time;
+
+	time = get_time();
+	while (get_time() - time < (unsigned long long)wait_time)
+		usleep(100);
 }
