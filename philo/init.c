@@ -6,7 +6,7 @@
 /*   By: muguveli <muguveli@student.42istanbul.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/01 20:34:17 by muguveli          #+#    #+#             */
-/*   Updated: 2024/06/01 20:59:17 by muguveli         ###   ########.fr       */
+/*   Updated: 2024/06/02 19:50:40 by muguveli         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 int	init_data(t_data *data, char **argv)
 {
 	data->philo_count = ft_atol(argv[1]);
+	if (data->philo_count < 1 && printf("%s\n", INVALID_ARGS_ERR))
+		return (1);
 	data->philo_live_time = ft_atol(argv[2]);
 	data->philo_eat_time = ft_atol(argv[3]);
 	data->philo_sleep_time = ft_atol(argv[4]);
@@ -22,7 +24,7 @@ int	init_data(t_data *data, char **argv)
 	if (argv[5])
 		data->philo_must_eat = ft_atol(argv[5]);
 	else
-		data->philo_must_eat = 0;
+		data->philo_must_eat = -1;
 	if (pthread_mutex_init(&data->display, NULL) && printf("%s\n",
 			MUTEX_INIT_ERR))
 		return (1);
